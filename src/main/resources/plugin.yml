@@ -1,0 +1,5 @@
+name: Tridiemtri
+version: '${project.version}'
+main: id.forgeforce.tridiemtri.Tridiemtri
+load: STARTUP
+authors: [ CardanaMH ]
