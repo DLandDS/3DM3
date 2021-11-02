@@ -6,7 +6,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class ItemManager {
     public static ItemStack Tridiem3;
-    private static void init(){
+    public static void init(){
         createTridiem3();
     }
     private static void createTridiem3(){
