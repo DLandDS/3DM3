@@ -12,7 +12,7 @@ public class Commands implements CommandExecutor {
             return true;
         }
         Player player = (Player) sender;
-        if(player.hasPermission("op")){
+        if(player.hasPermission("tridiemtri.admin")){
             if(cmd.getName().equalsIgnoreCase("tridiemtri")){
                 player.getInventory().addItem(ItemManager.Tridiem3);
             }
