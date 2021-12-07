@@ -27,11 +27,71 @@ public class ItemEvents implements Listener {
         Material name1 = player.getInventory().getItemInMainHand().getType();
         Material name2 = player.getInventory().getItemInOffHand().getType();
         if(name1.equals(Material.FISHING_ROD) || name2.equals(Material.FISHING_ROD)){
+            boolean mainhand=false,sneaking=false,panah=false,teleport=false;
+            ItemStack sebelah;
+            if(player.getInventory().getItemInMainHand().getType().equals(Material.FISHING_ROD)) {
+                mainhand = true;
+            }
+            if(player.isSneaking()){
+                sneaking = true;
+            }
+            if(mainhand) {
+                sebelah = player.getInventory().getItemInOffHand();
+            }
+            else{
+                sebelah = player.getInventory().getItemInMainHand();
+            }
+            if(sebelah.getType().equals(Material.ENDER_PEARL)){
+                teleport = true;
+            }
+            if(sebelah.getType().equals(Material.ARROW)){
+                panah = true;
+            }
+            Location playerLocation = player.getLocation();
             if(event.getState().equals(PlayerFishEvent.State.IN_GROUND)){
-                Location playerLocation = player.getLocation();
                 Location hookLocation = event.getHook().getLocation();
                 Location change = hookLocation.subtract(playerLocation);
                 player.setVelocity(change.toVector().multiply(0.3));
+            }
+            if(event.getState().equals(PlayerFishEvent.State.CAUGHT_ENTITY) && event.getCaught()!=null){
+                Location hookLocation = event.getCaught().getLocation();
+                if(teleport){
+                    event.getCaught().teleport(playerLocation);
+                    player.teleport(hookLocation);
+                    if(sebelah.getAmount()>1){
+                        sebelah.setAmount(sebelah.getAmount()-1);
+                    }
+                    else {
+                        if (mainhand)
+                            player.getInventory().setItemInOffHand(null);
+                        else
+                            player.getInventory().setItemInMainHand(null);
+                    }
+                }
+                if(panah){
+                    Location change = playerLocation.subtract(hookLocation);
+                    player.getWorld().spawnArrow(playerLocation,change.getDirection(),10,1);
+                    if(sebelah.getAmount()>1){
+                        sebelah.setAmount(sebelah.getAmount()-1);
+                    }
+                    else{
+                        if(mainhand)
+                            player.getInventory().setItemInOffHand(null);
+                        else
+                            player.getInventory().setItemInMainHand(null);
+                    }
+                    event.setCancelled(true);
+                }
+                if(!panah && !teleport){
+                    if(sneaking){
+                        Location change = playerLocation.subtract(hookLocation);
+                        event.getCaught().setVelocity(change.toVector().multiply(0.3));
+                    }
+                    else{
+                        Location change = hookLocation.subtract(playerLocation);
+                        player.setVelocity(change.toVector().multiply(0.3));
+                    }
+                }
             }
         }
     }
@@ -123,35 +183,36 @@ public class ItemEvents implements Listener {
                     pengguna.add(player);
                 Location playerLocation = player.getLocation();
                 Location hookLocation = fishHook.getLocation();
-                ItemStack backup;
-                boolean petir=false;
+                ItemStack backup,sebelah;
+                boolean petir=false,sneaking=false, teleport=false;
                 if(player.getInventory().getItemInMainHand().getType().equals(Material.FISHING_ROD)) {
                     mainhand = true;
                 }
+                if(player.isSneaking()){
+                    sneaking = true;
+                }
                 if(mainhand) {
                     backup = player.getInventory().getItemInMainHand();
-                    if(player.getInventory().getItemInOffHand().getEnchantments().containsKey(Enchantment.CHANNELING)){
-                        petir = true;
-                    }
-                    player.getInventory().setItemInMainHand(null);
+                    sebelah = player.getInventory().getItemInOffHand();
                 }
                 else{
                     backup = player.getInventory().getItemInOffHand();
-                    if(player.getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.CHANNELING)){
-                        petir = true;
-                    }
-                    player.getInventory().setItemInOffHand(null);
+                    sebelah = player.getInventory().getItemInMainHand();
+                }
+                if(!sneaking) {
+                    if(!mainhand)
+                        player.getInventory().setItemInOffHand(null);
+                    else
+                        player.getInventory().setItemInMainHand(null);
+                }
+                if(sebelah.getEnchantments().containsKey(Enchantment.CHANNELING)){
+                    petir = true;
+                }
+                if(sebelah.getType().equals(Material.ENDER_PEARL)){
+                    teleport = true;
                 }
                 if (player.getVehicle()!=null) {
                     player.getVehicle().removePassenger(player);
-                }
-                if(player.isSneaking()){
-                    Location change = playerLocation.subtract(hookLocation);
-                    event.getEntity().setVelocity(change.toVector().multiply(0.3));
-                }
-                else {
-                    Location change = hookLocation.subtract(playerLocation);
-                    player.setVelocity(change.toVector().multiply(0.3));
                 }
                 boolean finalMainhand = mainhand;
 
@@ -167,6 +228,33 @@ public class ItemEvents implements Listener {
                         backup.setItemMeta(damagable);
                     }
                 }
+                if(event.getHitEntity() != null && !player.isSneaking() && !petir){
+                    //kasih damage please kalau entity
+                    event.getHitEntity().addPassenger(player);
+                }
+                if(petir){
+                    event.getEntity().getWorld().strikeLightning(fishHook.getLocation());
+                }
+                if(teleport){
+                    if(event.getHitEntity() == null){
+                        if(sebelah.getAmount()>1){
+                            sebelah.setAmount(sebelah.getAmount()-1);
+                        }
+                        else{
+                            if(mainhand)
+                                player.getInventory().setItemInOffHand(null);
+                            else
+                                player.getInventory().setItemInMainHand(null);
+                        }
+                        player.teleport(hookLocation);
+                    }
+                }
+                if(!sneaking && !teleport){
+                    Location change = hookLocation.subtract(playerLocation);
+                    player.setVelocity(change.toVector().multiply(0.3));
+                }
+                if(sneaking)
+                    return;
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -178,13 +266,6 @@ public class ItemEvents implements Listener {
                         }
                     }
                 }.runTaskLater(Tridiemtri.getPlugin(),2);
-                if(event.getHitEntity() != null && !player.isSneaking() && !petir){
-                    //kasih damage please kalau entity
-                    event.getHitEntity().addPassenger(player);
-                }
-                if(petir){
-                    event.getEntity().getWorld().strikeLightning(fishHook.getLocation());
-                }
             }
         }
     }

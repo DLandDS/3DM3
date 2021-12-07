@@ -3,7 +3,7 @@ version: '${project.version}'
 main: id.forgeforce.tridiemtri.Tridiemtri
 load: STARTUP
 authors: [ CardanaMH ]
-api-version: 1.17
+api-version: 1.18
 commands:
   tridiemtri:
     description: "dapatkan 3DM MK 3"
