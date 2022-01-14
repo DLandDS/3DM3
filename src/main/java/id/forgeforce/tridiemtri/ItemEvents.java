@@ -121,7 +121,7 @@ public class ItemEvents implements Listener {
                     ItemMeta meta = backup.getItemMeta();
                     Damageable damagable = (Damageable) meta;
                     if(damagable!=null) {
-                        int damage = damagable.getDamage()+1;
+                        int damage = damagable.getDamage()+(10/(1+damagable.getEnchantLevel(Enchantment.DURABILITY)));
                         if(damage>=backup.getType().getMaxDurability()){
                             backup.setType(Material.STICK);
                         }
@@ -145,7 +145,7 @@ public class ItemEvents implements Listener {
                         ItemMeta meta = player.getInventory().getChestplate().getItemMeta();
                         Damageable damagable = (Damageable) meta;
                         if(damagable!=null) {
-                            int damage = damagable.getDamage()+1;
+                            int damage = damagable.getDamage()+(10/(1+damagable.getEnchantLevel(Enchantment.DURABILITY)));
                             damagable.setDamage(damage);
                             player.getInventory().getChestplate().setItemMeta(damagable);
                         }
@@ -219,7 +219,7 @@ public class ItemEvents implements Listener {
                 ItemMeta meta = backup.getItemMeta();
                 Damageable damagable = (Damageable) meta;
                 if(damagable!=null) {
-                    int damage = damagable.getDamage()+1;
+                    int damage = damagable.getDamage()+(10/(1+damagable.getEnchantLevel(Enchantment.DURABILITY)));
                     if(damage>=backup.getType().getMaxDurability()){
                         backup.setType(Material.STICK);
                     }
